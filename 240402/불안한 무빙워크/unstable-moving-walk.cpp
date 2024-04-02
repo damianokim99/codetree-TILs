@@ -52,6 +52,7 @@ void move_people()
         if (plate[np] == 0 && life[np] != 0)
         {
             plate[p] = 0;
+            v[i] = np;
             plate[np] = 1;
             life[np]--;
             if (life[np] == 0)
@@ -67,8 +68,8 @@ void move_people()
 }
 void push_people()
 {
-    int p = (2 * n - t) % (2 * n); // 0번 위치에 있는 발판 번호
-    if (plate[p] == 0 && life[p] != 0)
+    int p = (2 * n - t) % (2 * n);     // 0번 위치에 있는 발판 번호
+    if (plate[p] == 0 && life[p] != 0) // 이 칸에 사람x, 목숨 남아
     {
         plate[p] = 1;
         life[p]--;
@@ -95,12 +96,14 @@ int main()
         push_people();
         // 4. 안정성 0 k개 이상이면 종료
         // cout << cnt_0 << endl;
-        if (cnt_0 >= k)
-            break;
 
         // 횟수 카운트
-        ans++;
         // show_plate();
+        if (cnt_0 >= k)
+            break;
+        // if (ans == 15)
+        //     break;
+        ans++;
     }
     cout << ans;
 }

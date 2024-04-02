@@ -32,7 +32,7 @@ void pop_n() // n-1 번째 위치 pop
     int p = (((2 * n - t) % (2 * n)) + (n - 1)) % (2 * n);
     if (plate[p] == 1)
     {
-        plate[p] == 0;
+        plate[p] = 0;
         cnt_0++;
         for (int i = 0; i < v.size(); i++)
             if (v[i] == p)
@@ -49,7 +49,7 @@ void move_people()
         int p = v[i]; // i번째 사람이 존재한 발판번호
         int np = (p + 1) % (2 * n);
         // 앞의 발판으로 갈 수 있는지 확인
-        if (plate[np] == 0 && life[np] != 0)
+        if (plate[np] == 0 && life[np] != 0) // 옮길수 있으면
         {
             plate[p] = 0;
             v[i] = np;
@@ -69,7 +69,7 @@ void move_people()
 void push_people()
 {
     int p = (2 * n - t) % (2 * n);     // 0번 위치에 있는 발판 번호
-    if (plate[p] == 0 && life[p] != 0) // 이 칸에 사람x, 목숨 남아
+    if (plate[p] == 0 && life[p] != 0) // 이 칸에 사람x, 목숨0 x
     {
         plate[p] = 1;
         life[p]--;
@@ -89,21 +89,23 @@ int main()
     {
         // 1. 회전 (t 로 알아서 찾아감)
         t = (t + 1) % (2 * n);
+        // n-1 번째 위치의 사람 있으면 내보내기
         pop_n();
         // 2. 가장 먼저 올라간 사람부터 이동할 수 있으면 이동 (n번칸에 위치시 즉시 내림)
         move_people();
         // 3. 1번칸에 올릴수 있으면 올리기
         push_people();
         // 4. 안정성 0 k개 이상이면 종료
-        // cout << cnt_0 << endl;
-
-        // 횟수 카운트
-        // show_plate();
         if (cnt_0 >= k)
             break;
+
+        // show_plate();
         // if (ans == 15)
         //     break;
+
+        // 횟수 카운트
         ans++;
     }
+    // cout << cnt_0;
     cout << ans;
 }

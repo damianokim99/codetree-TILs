@@ -10,12 +10,23 @@ vector<int> v;   // 현재 투입된 사람이 있는 발판 번호
 int n, k;
 int cnt_0 = 0;
 int t = 0;
+int ans = 1;
 
 int find_plate(int x) // x번 발판의 위치
 {
     return (x + t) % (2 * n);
 }
-void pop_n()
+void show_plate()
+{
+    for (int i = 0; i < 2 * n; i++)
+    {
+        cout << i << " where: " << find_plate(i);
+        cout << " life: " << life[i];
+        cout << " bool: " << plate[i] << endl;
+    }
+    cout << endl;
+}
+void pop_n() // n-1 번째 위치 pop
 {
     // 현재 n-1 번쨰 위치의 발판 번호
     int p = (((2 * n - t) % (2 * n)) + (n - 1)) % (2 * n);
@@ -23,13 +34,17 @@ void pop_n()
     {
         plate[p] == 0;
         cnt_0++;
+        for (int i = 0; i < v.size(); i++)
+            if (v[i] == p)
+            {
+                v.erase(v.begin() + i);
+                break;
+            }
     }
 }
 void move_people()
 {
-    if (v.size() == 0)
-        return;
-    for (int i = 0; i < v.size() == 0; i++)
+    for (int i = 0; i < v.size(); i++)
     {
         int p = v[i]; // i번째 사람이 존재한 발판번호
         int np = (p + 1) % (2 * n);
@@ -57,6 +72,7 @@ void push_people()
     {
         plate[p] = 1;
         life[p]--;
+        v.push_back(p);
         if (life[p] == 0)
             cnt_0++;
     }
@@ -78,9 +94,13 @@ int main()
         // 3. 1번칸에 올릴수 있으면 올리기
         push_people();
         // 4. 안정성 0 k개 이상이면 종료
+        // cout << cnt_0 << endl;
         if (cnt_0 >= k)
             break;
-        // 첫 발판 위치 추적
+
+        // 횟수 카운트
+        ans++;
+        // show_plate();
     }
-    cout << t;
+    cout << ans;
 }

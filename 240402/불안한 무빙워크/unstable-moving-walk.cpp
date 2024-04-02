@@ -61,7 +61,9 @@ void move_people()
             if (find_plate(np) == n - 1) // 이 발판이 n-1 번쨰이면 pop
             {
                 plate[np] = 0;
-                v.erase(v.begin());
+                v.erase(v.begin() + i);
+                i--;
+                // pop_n();
             }
         }
     }

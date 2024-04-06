@@ -78,7 +78,7 @@ void throw_ball()
     // tx ty 에서 direc 방향으로 공을 던지다가 1 2 3찾기
     int x = tx;
     int y = ty;
-    int seq;
+    int seq = 0;
     while (is_in(x, y))
     {
         if (mapp[x][y] == 1 || mapp[x][y] == 2 || mapp[x][y] == 3)
@@ -90,7 +90,7 @@ void throw_ball()
         y += dy[direc];
     }
     points += seq * seq;
-    if (seq > 0)
+    if (seq > 0) // 사람 맞았으면
     {
         int temp_val = mapp[head_x][head_y];
         mapp[head_x][head_y] = mapp[tail_x][tail_y];
@@ -119,8 +119,11 @@ int main()
         for (int j = 0; j < n; j++)
             cin >> mapp[i][j];
 
+    int cnt = 1;
     while (k--)
     {
+        // cout << cnt++ << endl;
+        // cout << "ball: " << tx << "," << ty << "    ," << ball_move_direc << endl;
         // cout << "ball info: " << tx << " " << ty << " " << direc << endl;
         // 머리사람을 따라 한칸씩 이동
         move_people();
@@ -133,6 +136,7 @@ int main()
         // show_mapp();
         // 다음 공 방향 및 위치 설정
         change_ball();
+        // cout << "-------------------------------" << endl;
     }
     cout << points;
 }

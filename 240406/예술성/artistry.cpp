@@ -6,15 +6,15 @@
 using namespace std;
 int dx[4] = {1, -1, 0, 0};
 int dy[4] = {0, 0, 1, -1};
-int mapp[29][29];
-int group_mapp[29][29]; // 인덱싱 1부터
+int mapp[30][30];
+int group_mapp[30][30]; // 인덱싱 1부터
 int wall[900][900];     // wall[i][j]: i 번 그룹이 j 그룹과 맞다아 있는 벽의 수
-int visited2[29][29];
+int visited2[30][30];
 int num_of_group[900];   // 각 그룹별 갯수
 int xy_of_group[900][2]; // 각 그룹의 첫 x,y 좌표
-int n;
-int group_num = 0; // 그룹 갯수
-int points = 0;    // 정답출력
+int n;                   // 크기
+int group_num = 0;       // 그룹 갯수
+int points = 0;          // 정답출력
 
 int is_in(int x, int y);
 void show_groupmapp();
@@ -26,8 +26,9 @@ int count_points();
 
 void rotate_small(int x, int y, int size)
 {
+    // cout << "size:" << size << endl;
     // 현재 배열 복사해오기
-    int mapp_copy[14][14];
+    int mapp_copy[14][14] = {0};
     for (int i = 0; i < size; i++)
         for (int j = 0; j < size; j++)
             mapp_copy[i][j] = mapp[i + x][j + y];
@@ -40,7 +41,7 @@ void rotate_small(int x, int y, int size)
     // }
 
     // 배열 회전
-    int mapp_res[14][14];
+    int mapp_res[14][14] = {0};
     for (int i = 0; i < size; i++)
         for (int j = 0; j < size; j++)
             mapp_res[j][size - 1 - i] = mapp_copy[i][j];
@@ -58,15 +59,28 @@ void rotate_small(int x, int y, int size)
 }
 void rotate()
 {
-    int mapp_copy[29][29];
+    // cout << "mappbeforeBEFORE" << endl;
+    // show_mapp();
+
+    int mapp_copy[29][29] = {0};
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             mapp_copy[i][j] = mapp[i][j];
+
+    // cout << "mappcopybefore" << endl;
+    // for (int i = 0; i < n; i++)
+    // {
+    //     for (int j = 0; j < n; j++)
+    //         cout << mapp_copy[i][j] << " ";
+    //     cout << endl;
+    // }
+    // cout << endl;
     // 중심 회전
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             mapp_copy[n - 1 - j][i] = mapp[i][j];
-
+    //
+    // cout << "mappcopyafter" << endl;
     // for (int i = 0; i < n; i++)
     // {
     //     for (int j = 0; j < n; j++)
@@ -82,12 +96,14 @@ void rotate()
     rotate_small(n / 2 + 1, n / 2 + 1, (n - 1) / 2);
 
     // 중심 회전한거 옮겨오기
-    // 마지막으로 mapp[i][j]=mapp_copy[i][j];
     for (int i = 0; i < n; i++)
     {
         mapp[n / 2][i] = mapp_copy[n / 2][i];
         mapp[i][n / 2] = mapp_copy[i][n / 2];
     }
+
+    // cout << "after done" << endl;
+    // show_mapp();
 }
 int main()
 {
@@ -105,7 +121,16 @@ int main()
     {
         // 회전
         rotate();
+
+        // cout << "initbefore" << endl;
+        // show_mapp();
+
+        // 변수 초기화
         init_var();
+
+        // cout << "initafter" << endl;
+        // show_mapp();
+
         points += count_points();
     }
     cout << points;
@@ -113,9 +138,6 @@ int main()
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////
 void init_var()
 {
-    /*
-    int group_mapp[29][29]; // 인덱싱 1부터
-    */
     for (int i = 0; i < 30; i++)
         for (int j = 0; j < 30; j++)
             group_mapp[i][j] = 0;
@@ -138,7 +160,6 @@ int is_in(int x, int y)
         return 1;
     return 0;
 }
-
 void show_mapp()
 {
     for (int i = 0; i < n; i++)

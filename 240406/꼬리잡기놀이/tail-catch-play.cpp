@@ -42,6 +42,21 @@ int bfs(int x, int y)
     queue<pair<pair<int, int>, int>> q;
     q.push(make_pair(make_pair(x, y), 1));
     visited[x][y] = 1;
+
+    int close3_4 = 1; // 3 으로 점수 획득 했을 때, 3옆에 4가 없으면 ->0
+    if (mapp[x][y] == 3)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+            if (is_in(nx, ny) && mapp[nx][ny] == 4)
+                close3_4 = 0;
+        }
+    }
+    else
+        close3_4 = 0;
+
     while (!q.empty())
     {
         int a = q.front().first.first;
@@ -54,20 +69,31 @@ int bfs(int x, int y)
             int ny = b + dy[i];
             if (is_in(nx, ny) && visited[nx][ny] == 0 && (mapp[nx][ny] == 1 || mapp[nx][ny] == 2 || mapp[nx][ny] == 3))
             {
-                visited[nx][ny] = 1;
                 if (mapp[nx][ny] == 1)
                 {
-                    return_val = dist + 1;
-                    head_x = nx;
-                    head_y = ny;
-                    q.push(make_pair(make_pair(nx, ny), dist + 1));
+                    if (close3_4 == 1)
+                    {
+                        close3_4--;
+                    }
+                    else // close3_4 ==0
+                    {
+                        return_val = dist + 1;
+                        head_x = nx;
+                        head_y = ny;
+                        q.push(make_pair(make_pair(nx, ny), dist + 1));
+                        visited[nx][ny] = 1;
+                    }
                 }
                 else if (mapp[nx][ny] == 2)
+                {
                     q.push(make_pair(make_pair(nx, ny), dist + 1));
+                    visited[nx][ny] = 1;
+                }
                 else if (mapp[nx][ny] == 3)
                 {
                     tail_x = nx;
                     tail_y = ny;
+                    visited[nx][ny] = 1;
                 }
             }
         }
@@ -92,6 +118,7 @@ void throw_ball()
         x += dx[direc];
         y += dy[direc];
     }
+    // cout << "p: " << seq * seq << endl;
     points += seq * seq;
     if (seq > 0) // 사람 맞았으면
     {
@@ -126,7 +153,7 @@ int main()
     while (k--)
     {
         // cout << cnt++ << endl;
-        // cout << "ball: " << tx << "," << ty << "    ," << ball_move_direc << endl;
+        // cout << cnt++ << " ball: " << tx << "," << ty << "    ," << ball_move_direc << "   " << direc << endl;
         // cout << "ball info: " << tx << " " << ty << " " << direc << endl;
         // 머리사람을 따라 한칸씩 이동
         move_people();

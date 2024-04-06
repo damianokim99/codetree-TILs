@@ -18,9 +18,10 @@ int next_direc_change = 0;
 
 int is_in(int x, int y);
 void show_mapp();
-void move_group(int x, int y, int vst[20][20]);
+int move_group(int x, int y, int vst[20][20]);
 void move_people();
 void throw_ball();
+void move_little(int x, int y, int vst[20][20]);
 
 int bfs(int x, int y)
 {
@@ -54,13 +55,15 @@ int bfs(int x, int y)
             if (is_in(nx, ny) && visited[nx][ny] == 0 && (mapp[nx][ny] == 1 || mapp[nx][ny] == 2 || mapp[nx][ny] == 3))
             {
                 visited[nx][ny] = 1;
-                q.push(make_pair(make_pair(nx, ny), dist + 1));
                 if (mapp[nx][ny] == 1)
                 {
                     return_val = dist + 1;
                     head_x = nx;
                     head_y = ny;
+                    q.push(make_pair(make_pair(nx, ny), dist + 1));
                 }
+                else if (mapp[nx][ny] == 2)
+                    q.push(make_pair(make_pair(nx, ny), dist + 1));
                 else if (mapp[nx][ny] == 3)
                 {
                     tail_x = nx;
@@ -157,8 +160,18 @@ void show_mapp()
     }
     cout << endl;
 }
-void move_group(int x, int y, int vst[20][20])
+int move_group(int x, int y, int vst[20][20])
 {
+    int near_4 = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        int nx = x + dx[i];
+        int ny = y + dy[i];
+        if (mapp[nx][ny] == 4)
+            near_4 = 1;
+    }
+    if (near_4 == 0) // 옆에 4가 하나도 없으면 _> 전부 연결됨
+        return 0;
     int visited[20][20] = {0};
     int a = x;
     int b = y;
@@ -201,6 +214,7 @@ void move_group(int x, int y, int vst[20][20])
             }
         }
     }
+    return 1;
 }
 void move_people()
 {
@@ -208,5 +222,40 @@ void move_people()
     for (int i = 0; i < n; i++)
         for (int j = 0; j < n; j++)
             if (mapp[i][j] == 1 && visited[i][j] == 0)
-                move_group(i, j, visited);
+            {
+                // cout << "move: " << i << "," << j;
+                int c = move_group(i, j, visited);
+                if (c == 0)
+                    move_little(i, j, visited);
+                // cout << "movedone" << endl;
+            }
+}
+void move_little(int x, int y, int vst[20][20])
+{
+    int x_3, y_3; // 1 옆의 3찾기
+    for (int i = 0; i < 4; i++)
+    {
+        int nx = x + dx[i];
+        int ny = y + dy[i];
+        if (mapp[nx][ny] == 3)
+        {
+            x_3 = nx;
+            y_3 = ny;
+        }
+    }
+    int x_2, y_2; // 3옆의 2찾기
+    for (int i = 0; i < 4; i++)
+    {
+        int nx = x_3 + dx[i];
+        int ny = y_3 + dy[i];
+        if (mapp[nx][ny] == 2)
+        {
+            x_2 = nx;
+            y_2 = ny;
+        }
+    }
+    mapp[x][y] = 2;
+    mapp[x_3][y_3] = 1;
+    mapp[x_2][y_2] = 3;
+    vst[x_3][y_3] = 1;
 }

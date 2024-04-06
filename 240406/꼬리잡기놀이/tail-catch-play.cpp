@@ -152,9 +152,7 @@ int main()
     int cnt = 1;
     while (k--)
     {
-        // cout << cnt++ << endl;
         // cout << cnt++ << " ball: " << tx << "," << ty << "    ," << ball_move_direc << "   " << direc << endl;
-        // cout << "ball info: " << tx << " " << ty << " " << direc << endl;
         // 머리사람을 따라 한칸씩 이동
         move_people();
         // cout << "after move" << endl;
@@ -194,7 +192,7 @@ int move_group(int x, int y, int vst[20][20])
     {
         int nx = x + dx[i];
         int ny = y + dy[i];
-        if (mapp[nx][ny] == 4)
+        if (is_in(nx, ny) && mapp[nx][ny] == 4)
             near_4 = 1;
     }
     if (near_4 == 0) // 옆에 4가 하나도 없으면 _> 전부 연결됨
@@ -250,11 +248,14 @@ void move_people()
         for (int j = 0; j < n; j++)
             if (mapp[i][j] == 1 && visited[i][j] == 0)
             {
-                // cout << "move: " << i << "," << j;
                 int c = move_group(i, j, visited);
                 if (c == 0)
+                {
+                    // cout << "c0";
                     move_little(i, j, visited);
-                // cout << "movedone" << endl;
+                }
+                // else
+                // cout << "c1";
             }
 }
 void move_little(int x, int y, int vst[20][20])

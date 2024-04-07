@@ -89,7 +89,7 @@ int main()
     //////
     airconditioner_save();
     int turn = 1;
-    while (1)
+    while (turn <= 100)
     {
         // 에어컨 작동
         airconditioner_work();
@@ -105,7 +105,7 @@ int main()
         // 턴 증가
         turn++;
     }
-    if (turn > 100)
+    if (turn == 101)
         cout << -1;
     else
         cout << turn;

@@ -189,7 +189,7 @@ void show_rb()
 }
 void show_best()
 {
-    int max_point = 0;
+    long long max_point = 0;
     for (int i = 0; i < num_of_rabbit; i++)
         if (point[i] > max_point)
             max_point = point[i];

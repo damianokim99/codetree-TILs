@@ -4,12 +4,12 @@ int n, ans;
 int ix, iy;
 int dx[4] = {1, -1, 0, 0};
 int dy[4] = {0, 0, 1, -1};
-int mapp[101][101]; // 0~101
-int visited[101][101];
+int mapp[102][102]; // 0~101
+int visited[101][102];
 
 int is_in(int x, int y)
 {
-    if (x >= 0 && y >= 0 && x <= 100 && y <= 100)
+    if (x >= 0 && y >= 0 && x <= 101 && y <= 101)
         return 1;
     return 0;
 }

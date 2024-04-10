@@ -69,7 +69,7 @@ void crash_rudolf_to_santa(int direc)
             life[id_move] = -1;
             continue;
         }
-        mapp[x][y] = id;
+        mapp[x][y] = id_move;
         position[id_move][0] += ddx[direc];
         position[id_move][1] += ddy[direc];
     }
@@ -194,16 +194,15 @@ int main()
 
         // cout << Rx << "," << Ry << " " << rd << endl;
         // 상호작용 확인
-        // show_mapp();
         // cout << "before" << endl;
+        // show_mapp();
         crash_rudolf_to_santa(rd);
         // cout << "after_rudolf" << endl;
+        // show_mapp();
         // 남은 산타 수 확인
         int live_sant = check_santa();
         if (live_sant == 0)
             break;
-        // show_mapp();
-        // cout << "after_santa" << endl;
         // 1~P 산타 움직이기
         for (int i = 1; i <= P; i++)
         {
@@ -212,6 +211,7 @@ int main()
             move_santa(i);
         }
 
+        // cout << "after_santa" << endl;
         // show_mapp();
         // return 0;
 
@@ -223,15 +223,16 @@ int main()
         // cout << "life" << endl;
         // for (int i = 1; i <= P; i++)
         //     cout << life[i] << " ";
+        // cout << endl;
         // 기절 산타들 1턴씩 깨우기
         for (int i = 1; i <= P; i++)
             if (life[i] > 0)
                 life[i]--;
-        // cout << endl;
         // cout << "points" << endl;
         // for (int i = 1; i <= P; i++)
         //     cout << points[i] << " ";
         // cout << endl;
+
         // cout << "pos" << endl;
         // show_P();
         // cout << "-----------------------" << endl;

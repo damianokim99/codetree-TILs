@@ -44,7 +44,6 @@ void crash_rudolf_to_santa(int direc)
     // mapp[nx][ny] 최신화 해줘야됨
 
     // 칸 안이면
-    // cout << "c" << endl;
     int nid = mapp[nx][ny];
     queue<int> q; // 연쇄 충돌 산타 모임
     while (nid > 0)
@@ -64,7 +63,7 @@ void crash_rudolf_to_santa(int direc)
         int id_move = q.front();
         q.pop();
         int x = position[id_move][0] + ddx[direc];
-        int y = position[id_move][0] + ddy[direc];
+        int y = position[id_move][1] + ddy[direc];
         if (is_in(x, y) == 0)
         {
             life[id_move] = -1;
@@ -74,7 +73,6 @@ void crash_rudolf_to_santa(int direc)
         position[id_move][0] += ddx[direc];
         position[id_move][1] += ddy[direc];
     }
-    // cout << "a" << endl;
     // 날라온 산타 처리
     mapp[position[id][0] + ddx[direc] * C][position[id][1] + ddy[direc] * C] = id;
     position[id][0] = position[id][0] + ddx[direc] * C;
@@ -181,6 +179,7 @@ int main()
         position[ai][0] = ax;
         position[ai][1] = ay;
     }
+    // show_mapp();
     // cout << "--------------------" << endl;
     int turn = 1;
     while (M--)
@@ -195,13 +194,16 @@ int main()
 
         // cout << Rx << "," << Ry << " " << rd << endl;
         // 상호작용 확인
-        // cout << "start c r t s" << endl;
+        // show_mapp();
+        // cout << "before" << endl;
         crash_rudolf_to_santa(rd);
-        // cout << "end c r t s" << endl;
+        // cout << "after_rudolf" << endl;
         // 남은 산타 수 확인
         int live_sant = check_santa();
         if (live_sant == 0)
             break;
+        // show_mapp();
+        // cout << "after_santa" << endl;
         // 1~P 산타 움직이기
         for (int i = 1; i <= P; i++)
         {
@@ -209,7 +211,6 @@ int main()
                 continue;
             move_santa(i);
         }
-        // cout << 2 << endl;
 
         // show_mapp();
         // return 0;
@@ -233,8 +234,7 @@ int main()
         // cout << endl;
         // cout << "pos" << endl;
         // show_P();
-        // cout
-        //     << "-----------------------" << endl;
+        // cout << "-----------------------" << endl;
     }
 
     // 정답 출력

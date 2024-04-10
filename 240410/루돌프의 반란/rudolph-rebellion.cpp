@@ -55,7 +55,6 @@ int crash_rudolf_to_santa(int direc)
         ny += ddy[direc];
         if (is_in(nx, ny) == 0)
             break;
-
         nid = mapp[nx][ny];
     }
 
@@ -151,7 +150,7 @@ void move_santa(int id)
         int id_move = q.front();
         q.pop();
         int x = position[id_move][0] + dx[nd];
-        int y = position[id_move][0] + dy[nd];
+        int y = position[id_move][1] + dy[nd];
         if (is_in(x, y) == 0)
         {
             life[id_move] = -1;

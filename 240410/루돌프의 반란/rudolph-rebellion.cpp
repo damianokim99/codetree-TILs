@@ -44,6 +44,7 @@ int crash_rudolf_to_santa(int direc)
     // mapp[nx][ny] 최신화 해줘야됨
 
     // 칸 안이면
+    cout <<"c"<<endl;
     int nid = mapp[nx][ny];
     queue<int> q; // 연쇄 충돌 산타 모임
     while (nid > 0)
@@ -73,12 +74,13 @@ int crash_rudolf_to_santa(int direc)
         position[id_move][0] += ddx[direc];
         position[id_move][1] += ddy[direc];
     }
-
+    cout << "a" << endl;
     // 날라온 산타 처리
     mapp[position[id][0] + ddx[direc] * C][position[id][1] + ddy[direc] * C] = id;
     position[id][0] = position[id][0] + ddx[direc] * C;
     position[id][1] = position[id][1] + ddy[direc] * C;
     life[id] = 2;
+    cout << "b" << endl;
 }
 
 void move_santa(int id)
@@ -183,17 +185,19 @@ int main()
     int turn = 1;
     while (M--)
     {
-        // cout << "turn: " << turn++ << endl;
-        // cout << Rx << "," << Ry << " " << endl;
+        cout << "turn: " << turn++ << endl;
+        cout << Rx << "," << Ry << " " << endl;
         // 가장 가까운 산타 찾기
         int santa_id = find_santa();
-        // cout << "select santa." << santa_id << ": " << position[santa_id][0] << "," << position[santa_id][1] << endl;
+        cout << "select santa." << santa_id << ": " << position[santa_id][0] << "," << position[santa_id][1] << endl;
         // 루돌프 움직이기
         int rd = move_rudolf(santa_id); // 루돌프가 움직인 방향 리턴
 
-        // cout << Rx << "," << Ry << " " << rd << endl;
+        cout << Rx << "," << Ry << " " << rd << endl;
         // 상호작용 확인
+        cout << 0 << endl;
         crash_rudolf_to_santa(rd);
+        cout << 1 << endl;
         // 남은 산타 수 확인
         int live_sant = check_santa();
         if (live_sant == 0)
@@ -205,8 +209,9 @@ int main()
                 continue;
             move_santa(i);
         }
+        cout << 2 << endl;
 
-        // show_mapp();
+        show_mapp();
         // return 0;
 
         // 살아있는 넘들 +1

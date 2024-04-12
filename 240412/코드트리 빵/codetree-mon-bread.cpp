@@ -63,7 +63,6 @@ void move_people(int id)
         reached[id] = 1;
         reached_p++;
         reached_con.push(make_pair(dest_x, dest_y));
-        // cout << "Reached" << endl;
         return;
     }
 
@@ -108,8 +107,7 @@ void start_base(int id)
                     p[id][0] = nx;
                     p[id][1] = ny;
                     mapp[nx][ny] = 2; // 이제부터 이동 불가
-                    // cout << "found!: " << nx << "," << ny << endl;
-                    is_stop = 1; // 그만탐색
+                    is_stop = 1;      // 그만탐색
                     break;
                 }
                 else if (mapp[nx][ny] == 0)
@@ -138,7 +136,7 @@ int main()
     }
     // cout << endl;
     int turn = 0;
-    while (1)
+    while (reached_p != m)
     {
         // 격자에 존재하는 사람들 전부 원하는 방향으로 이동
         int move_p = turn;
@@ -152,8 +150,8 @@ int main()
                 move_people(i);
 
         // 전부 도달 시 종료
-        if (reached_p == m)
-            break;
+        // if (reached_p == m)
+        //     break;
 
         // 닫아야 하는 편의점들 전부 닫기
         close_con();
@@ -172,7 +170,7 @@ int main()
 
         // cout << "--------------------------" << endl;
     }
-    cout << turn + 1;
+    cout << turn;
 }
 //```````````````````````````````````````````````````````````````````````````//
 void close_con()

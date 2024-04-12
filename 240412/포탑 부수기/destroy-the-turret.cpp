@@ -1,491 +1,293 @@
-// 18:40 시작
-#include <bits/stdc++.h>
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <climits>
+#include <utility>
 using namespace std;
-int N, M, K;
-int mapp[11][11];
-int attack_time[11][11]; // 0: default
-int visited[11][11];
-int involved[11][11];
-int time_cnt = 1;
-int reinforce;
-int min_route = numeric_limits<int>::max();
-int route_ok = 0;
-string route_string = "";
-int dx[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
-int dy[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
-vector<pair<int, int>> v[4];
-vector<pair<int, int>> m[4];
-vector<pair<int, int>> together;
-int ans;
 
-int select_min()
+int N, M, K, Ax, Ay, Bx, By, turn = 1;
+int mapp[10][10]; // 0 ~ N-1
+int last_attack[10][10];
+int dx[4] = {0, 1, 0, -1}; // 우 하 상 좌 로 탐색
+int dy[4] = {1, 0, -1, 0};
+int ddx[8] = {1, 1, 1, 0, 0, -1, -1, -1};
+int ddy[8] = {1, 0, -1, 1, -1, 1, 0, -1};
+int participated[10][10] = {0};
+
+int check_left();
+int x_change(int x);
+int y_change(int y);
+int oppose_direc(int d);
+
+void show_mapp();
+void print_ans();
+void find_attack();
+void find_hit();
+int find_laser();
+void find_bomb();
+
+int find_laser() // 동일하면 우 하 상 좌 순서로
 {
-    int min = 5000;
-    // 공격력 낮은 찾기
-    for (int i = 1; i <= N; i++)
-    {
-        for (int j = 1; j <= M; j++)
-        {
-            if (mapp[i][j] > 0)
-            {
-                if (mapp[i][j] < min)
-                {
-                    v[0].clear();
-                    v[0].push_back(make_pair(i, j));
-                    min = mapp[i][j];
-                }
-                else if (mapp[i][j] == min)
-                {
-                    v[0].push_back(make_pair(i, j));
-                }
-            }
-        }
-    }
-
-    if (v[0].size() == 1)
-        return 0;
-    else // 가장 최근 공격한
-    {
-        int recent_attack = -1;
-        for (int i = 0; i < v[0].size(); i++)
-        {
-            int x = v[0][i].first;
-            int y = v[0][i].second;
-            if (attack_time[x][y] > recent_attack)
-            {
-                v[1].clear();
-                v[1].push_back(make_pair(x, y));
-                recent_attack = attack_time[x][y];
-            }
-            else if (attack_time[x][y] == recent_attack)
-            {
-                v[1].push_back(make_pair(x, y));
-            }
-        }
-    }
-
-    if (v[1].size() == 1)
-        return 1;
-    else // x+y합이 가장 큰
-    {
-        int sum = 0;
-        for (int i = 0; i < v[1].size(); i++)
-        {
-            int x = v[1][i].first;
-            int y = v[1][i].second;
-            if (x + y > sum)
-            {
-                v[2].clear();
-                v[2].push_back(make_pair(x, y));
-                sum = x + y;
-            }
-            else if (x + y == sum)
-            {
-                v[2].push_back(make_pair(x, y));
-            }
-        }
-    }
-
-    if (v[2].size() == 1)
-        return 2;
-    else // y값이 가장 큰
-    {
-        int max_y = 0;
-        for (int i = 0; i < v[2].size(); i++)
-        {
-            int x = v[2][i].first;
-            int y = v[2][i].second;
-            if (y > max_y)
-            {
-                v[3].clear();
-                v[3].push_back(make_pair(x, y));
-                max_y = y;
-            }
-        }
-    }
-    return 3;
-    /*
-    1. 공격력 낮은
-    2. 가장 최근 공격한
-    3. x+y 합이 큰
-    4. y값이 큰
-    */
-}
-int select_max()
-{
-    int max_val = 0;
-    // 공격력 높은 찾기
-    for (int i = 1; i <= N; i++)
-    {
-        for (int j = 1; j <= M; j++)
-        {
-            if (mapp[i][j] > 0)
-            {
-                if (mapp[i][j] > max_val)
-                {
-                    m[0].clear();
-                    m[0].push_back(make_pair(i, j));
-                    max_val = mapp[i][j];
-                }
-                else if (mapp[i][j] == max_val)
-                {
-                    m[0].push_back(make_pair(i, j));
-                }
-            }
-        }
-    }
-
-    if (m[0].size() == 1)
-        return 0;
-    else // 가장 나중에 공격한
-    {
-        int oldest_attack = 1000;
-        for (int i = 0; i < m[0].size(); i++)
-        {
-            int x = m[0][i].first;
-            int y = m[0][i].second;
-            if (attack_time[x][y] < oldest_attack)
-            {
-                m[1].clear();
-                m[1].push_back(make_pair(x, y));
-                oldest_attack = attack_time[x][y];
-            }
-            else if (attack_time[x][y] == oldest_attack)
-            {
-                m[1].push_back(make_pair(x, y));
-            }
-        }
-    }
-
-    if (m[1].size() == 1)
-        return 1;
-    else // x+y합이 가장 작은
-    {
-        int sum = 30;
-        for (int i = 0; i < m[1].size(); i++)
-        {
-            int x = m[1][i].first;
-            int y = m[1][i].second;
-            if (x + y < sum)
-            {
-                m[2].clear();
-                m[2].push_back(make_pair(x, y));
-                sum = x + y;
-            }
-            else if (x + y == sum)
-            {
-                m[2].push_back(make_pair(x, y));
-            }
-        }
-    }
-
-    if (m[2].size() == 1)
-        return 2;
-    else // y값이 가장 작은
-    {
-        int min_y = 5000;
-        for (int i = 0; i < m[2].size(); i++)
-        {
-            int x = m[2][i].first;
-            int y = m[2][i].second;
-            if (y < min_y)
-            {
-                m[3].clear();
-                m[3].push_back(make_pair(x, y));
-                min_y = y;
-            }
-        }
-    }
-    return 3;
-    /*
-    1. 공격력 높은
-    2. 가장 오래전에 공격한
-    3. x+y 합이 작은
-    4. y값이 작은
-    */
-}
-
-void reinforce_attacker(int x, int y)
-{
-    mapp[x][y] += reinforce;
-}
-
-int attack_laser(int x_1, int y_1, int x_2, int y_2, string route, int route_cnt, int arr[11][11])
-{
-    if (arr[x_1][y_1] == 1 || mapp[x_1][y_1] == 0) // 방문 되었거나 값이 0이면 return
-        return 0;
-
-    int arr_cpy[11][11]; // copy
-
-    for (int i = 1; i <= N; i++)
-    {
-        for (int j = 1; j <= M; j++)
-        {
-            arr_cpy[i][j] = arr[i][j];
-        }
-    }
-    arr_cpy[x_1][y_1] = 1;
-
-    if (x_1 == x_2 && y_1 == y_2) // 도착 완료
-    {
-        route_ok = 1;              // 전역변수
-        if (route_cnt < min_route) // 최솟값 갱신
-        {
-            route_string = route; // 전역변수 설정
-            min_route = route_cnt;
-        }
-        return 0;
-    }
-    // 우
-    if (y_1 != M)
-        attack_laser(x_1, y_1 + 1, x_2, y_2, route + "1", route_cnt + 1, arr_cpy);
-    else
-        attack_laser(x_1, 1, x_2, y_2, route + "1", route_cnt + 1, arr_cpy);
-    // 하
-    if (x_1 != N)
-        attack_laser(x_1 + 1, y_1, x_2, y_2, route + "2", route_cnt + 1, arr_cpy);
-    else
-        attack_laser(1, y_1, x_2, y_2, route + "2", route_cnt + 1, arr_cpy);
-    // 좌
-    if (y_1 != 1)
-        attack_laser(x_1, y_1 - 1, x_2, y_2, route + "3", route_cnt + 1, arr_cpy);
-    else
-        attack_laser(x_1, M, x_2, y_2, route + "3", route_cnt + 1, arr_cpy);
-    // 상
-    if (x_1 != 1)
-        attack_laser(x_1 - 1, y_1, x_2, y_2, route + "4", route_cnt + 1, arr_cpy);
-    else // 1이면
-        attack_laser(N, y_1, x_2, y_2, route + "4", route_cnt + 1, arr_cpy);
-
-    return 0;
-}
-
-int laser_bfs(int x_1, int y_1, int x_2, int y_2)
-{
-    queue<tuple<int, int, string>> q;
-    q.push(make_tuple(x_1, y_1, ""));
-
+    int laser_ok = 0;
+    int visited[10][10] = {0};
+    queue<pair<int, int>> q;
+    q.push(make_pair(Ax, Ay));
+    visited[Ax][Ay] = -1; // 시작위치 저장
     while (!q.empty())
     {
-        int x, y;
-        string s;
-        tuple<int, int, string> item = q.front();
-        tie(x, y, s) = item;
-
-        if (x == x_2 && y == y_2) // 경로 찾으면 리턴
-        {
-            route_ok = 1;
-            route_string = s;
-            return 0;
-        }
-
+        int x = q.front().first;
+        int y = q.front().second;
         q.pop();
-        if (visited[x][y] == 0 && mapp[x][y] != 0)
+        for (int i = 0; i < 4; i++) // 우 하 상 좌
         {
-            visited[x][y] = 1;
-            // 우
-            if (y != M)
-                q.push(make_tuple(x, y + 1, s + "1"));
-            else
-                q.push(make_tuple(x, 1, s + "1"));
-            // 하
-            if (x != N)
-                q.push(make_tuple(x + 1, y, s + "2"));
-            else
-                q.push(make_tuple(1, y, s + "2"));
-            // 좌
-            if (y != 1)
-                q.push(make_tuple(x, y - 1, s + "3"));
-            else
-                q.push(make_tuple(x, M, s + "3"));
-            // 상
-            if (x != 1)
-                q.push(make_tuple(x - 1, y, s + "4"));
-            else
-                q.push(make_tuple(N, y, s + "4"));
+            int nx = x + dx[i];
+            int ny = y + dy[i];
+            nx = x_change(nx);
+            ny = y_change(ny);
+            if (mapp[nx][ny] > 0 && visited[nx][ny] == 0)
+            {
+                q.push(make_pair(nx, ny));
+                visited[nx][ny] = i + 1; // 방향 기억하기
+                if (nx == Bx && ny == By)
+                    laser_ok = 1;
+            }
         }
+    }
+    if (laser_ok == 0)
+        return -1;
+
+    participated[Ax][Ay] = 1;
+    participated[Bx][By] = 1;
+
+    int hit_half = mapp[Ax][Ay] / 2;
+    mapp[Bx][By] -= mapp[Ax][Ay];
+    int direc = oppose_direc(visited[Bx][By] - 1);
+    Bx = x_change(Bx + dx[direc]);
+    By = y_change(By + dy[direc]);
+
+    while (visited[Bx][By] != -1) // 출발지 도착
+    {
+        participated[Bx][By] = 1;
+        mapp[Bx][By] -= hit_half;
+        direc = oppose_direc(visited[Bx][By] - 1);
+        Bx = x_change(Bx + dx[direc]);
+        By = y_change(By + dy[direc]);
     }
     return 0;
 }
-
-void add_together(int x, int y) // 경로 추가 x,y에서 출발
+void find_bomb()
 {
-    int l = route_string.size();
+    int damage = mapp[Ax][Ay];
+    int half_damage = damage / 2;
+    mapp[Bx][By] -= damage;
+    participated[Ax][Ay] = 1;
+    participated[Bx][By] = 1;
 
-    for (int i = 0; i < l - 1; i++)
-    {
-        int direction = route_string[i];
-        if (direction == '1')
-            y++;
-        else if (direction == '2')
-            x++;
-        else if (direction == '3')
-            y--;
-        else // direction=='4'
-            x--;
-
-        if (x == 0)
-            x = N;
-        else if (x == N + 1)
-            x = 1;
-        if (y == 0)
-            y = M;
-        else if (y == M + 1)
-            y = 1;
-        together.push_back(make_pair(x, y));
-        involved[x][y] = 1;
-    }
-}
-void attack_bomb(int x_1, int y_1, int x_2, int y_2) // 경로 추가
-{
     for (int i = 0; i < 8; i++)
     {
-        int x = x_2 + dx[i];
-        int y = y_2 + dy[i];
-        if (x == N + 1)
-            x = 1;
-        else if (x == 0)
-            x = N;
-        if (y == M + 1)
-            y = 1;
-        else if (y == 0)
-            y = M;
-
-        if (x != x_1 || y != y_1)
+        int nx = Bx + ddx[i];
+        int ny = By + ddy[i];
+        nx = x_change(nx);
+        ny = y_change(ny);
+        if (mapp[nx][ny] > 0 && (nx != Ax || ny != Ay)) // 0 아니고 공격자 아니면
         {
-            together.push_back(make_pair(x, y));
-            involved[x][y] = 1;
+            mapp[nx][ny] -= half_damage;
+            participated[nx][ny] = 1;
         }
     }
 }
 
-int count_remain() // 2명 이상이면 return 1, 1 명이면 return 0-> 게임 종료
+int main()
 {
-    int cnt = 0;
-    for (int i = 1; i <= N; i++)
+    // input
+    cin >> N >> M >> K;
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < M; j++)
+            cin >> mapp[i][j];
+
+    while (K--)
     {
-        for (int j = 1; j <= M; j++)
-        {
+        // cout << turn << endl;
+        // 공격자 선정 (가장 약한 포탑)
+        find_attack();
+        // 피격자 선정 (가장 강한 포탑)
+        find_hit();
+        // 공격자 강화
+        mapp[Ax][Ay] += (M + N);
+        // 레이저 공격 & 포탑정비
+        int laser_ok = find_laser();
+        // 포탑 공격
+        if (laser_ok == -1) // 레이저 안되면
+            find_bomb();
+
+        // 하나 남으면 중지
+        int check = check_left();
+        if (check == 1)
+            break;
+        // show_mapp();
+        // 포탑정비
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < M; j++)
+                if (mapp[i][j] > 0 && participated[i][j] == 0) // 살아 있고, 참여하지 않은
+                    mapp[i][j]++;
+        // 턴 증가
+        turn++;
+        // 참여자 초기화
+        for (int i = 0; i < N; i++)
+            for (int j = 0; j < M; j++)
+                participated[i][j] = 0;
+    }
+    print_ans();
+}
+//----------------------------------------------------------------------------------------------------//
+
+void find_hit()
+{
+    /*
+    1. 공격력 높은
+    2. 가장 오래전에 공격
+    3. x+y작은
+    4. y작은
+    */
+    int max_attack = INT_MIN;
+    int late_attack = INT_MIN;
+    int xy_min = INT_MAX;
+    int y_min = INT_MAX;
+    int x;
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < M; j++)
             if (mapp[i][j] > 0)
             {
-                cnt++;
-                ans = mapp[i][j];
+                if (mapp[i][j] > max_attack)
+                {
+                    max_attack = mapp[i][j];
+                    late_attack = last_attack[i][j];
+                    xy_min = i + j;
+                    y_min = j;
+                    x = i;
+                }
+                else if (mapp[i][j] == max_attack && last_attack[i][j] < late_attack)
+                {
+                    late_attack = last_attack[i][j];
+                    xy_min = i + j;
+                    y_min = j;
+                    x = i;
+                }
+                else if (mapp[i][j] == max_attack && last_attack[i][j] == late_attack && i + j < xy_min)
+                {
+                    xy_min = i + j;
+                    y_min = j;
+                    x = i;
+                }
+                else if (mapp[i][j] == max_attack && last_attack[i][j] == late_attack && i + j == xy_min && j < y_min)
+                {
+                    y_min = j;
+                    x = i;
+                }
             }
-            if (cnt > 1)
-                return 1;
-        }
-    }
-    return 0;
+    Bx = x;
+    By = y_min;
+}
+void find_attack()
+{
+    /*
+    1. 공격력 낮은
+    2. 가장 최근 공격
+    3. x+y큰
+    4. y큰
+    */
+    int min_attack = INT_MAX;
+    int recent_attack = INT_MIN;
+    int xy_max = INT_MIN;
+    int y_max = INT_MIN;
+    int x;
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < M; j++)
+            if (mapp[i][j] > 0)
+            {
+                if (mapp[i][j] < min_attack)
+                {
+                    min_attack = mapp[i][j];
+                    recent_attack = last_attack[i][j];
+                    xy_max = i + j;
+                    y_max = j;
+                    x = i;
+                }
+                else if (mapp[i][j] == min_attack && last_attack[i][j] > recent_attack)
+                {
+                    recent_attack = last_attack[i][j];
+                    xy_max = i + j;
+                    y_max = j;
+                    x = i;
+                }
+                else if (mapp[i][j] == min_attack && last_attack[i][j] == recent_attack && i + j > xy_max)
+                {
+                    xy_max = i + j;
+                    y_max = j;
+                    x = i;
+                }
+                else if (mapp[i][j] == min_attack && last_attack[i][j] == recent_attack && i + j == xy_max && j > y_max)
+                {
+                    y_max = j;
+                    x = i;
+                }
+            }
+    Ax = x;
+    Ay = y_max;
+    last_attack[Ax][Ay] = turn;
+}
+void print_ans()
+{
+    int max_attack = 0;
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < M; j++)
+            if (mapp[i][j] > max_attack)
+                max_attack = mapp[i][j];
+    cout << max_attack;
 }
 void show_mapp()
 {
-    for (int i = 1; i <= N; i++)
+    for (int i = 0; i < N; i++)
     {
-        for (int j = 1; j <= M; j++)
+        for (int j = 0; j < M; j++)
             cout << mapp[i][j] << " ";
         cout << endl;
     }
 }
-int main()
+int check_left()
 {
-    cin >> N >> M >> K;
-    reinforce = N + M;
-    for (int i = 1; i <= N; i++)
-    {
-        for (int j = 1; j <= M; j++)
-        {
-            cin >> mapp[i][j];
-        }
-    }
-
-    int turn = 1;
-    while (K--)
-    {
-        // cout << turn++ << endl;
-        // 공격 피격 대상 찾기.
-        int find_min = select_min();
-        int find_max = select_max();
-
-        int x_attack = v[find_min][0].first;
-        int y_attack = v[find_min][0].second;
-
-        int x_hit = m[find_max][0].first;
-        int y_hit = m[find_max][0].second;
-
-        // 공격자 강화
-        reinforce_attacker(x_attack, y_attack);
-
-        // 공격
-        laser_bfs(x_attack, y_attack, x_hit, y_hit);
-
-        //  경로 추가
-        if (route_ok == 1)
-            add_together(x_attack, y_attack);
-        else
-            attack_bomb(x_attack, y_attack, x_hit, y_hit);
-
-        // 공격 (대상과 +a 데미지)
-        involved[x_attack][y_attack] = 1;
-        involved[x_hit][y_hit] = 1;
-
-        int attack_force = mapp[x_attack][y_attack];
-        mapp[x_hit][y_hit] -= attack_force;
-
-        if (mapp[x_hit][y_hit] < 0)
-            mapp[x_hit][y_hit] = 0;
-        for (int i = 0; i < together.size(); i++)
-        {
-            mapp[together[i].first][together[i].second] -= attack_force / 2;
-            if (mapp[together[i].first][together[i].second] < 0)
-                mapp[together[i].first][together[i].second] = 0;
-        }
-
-        // 한명 남았는지 확인 -> 맞으면 즉시 break
-        if (count_remain() == 0)
-        {
-            cout << ans;
-            return 0;
-        }
-
-        // show_mapp();
-
-        // // 공격 안받은 포탑들 +1
-        for (int i = 1; i <= N; i++)
-        {
-            for (int j = 1; j <= M; j++)
-            {
-                if (involved[i][j] == 0 && mapp[i][j] > 0)
-                    mapp[i][j]++;
-            }
-        }
-
-        // 공격카운트 증가 및  및 변수 초기화&최신화
-        attack_time[x_attack][y_attack] = time_cnt;
-        time_cnt++;
-        v[find_min].clear();
-        m[find_max].clear();
-        together.clear();
-        for (int i = 1; i <= N; i++)
-        {
-            for (int j = 1; j <= M; j++)
-            {
-                visited[i][j] = 0;
-                involved[i][j] = 0;
-            }
-        }
-        min_route = numeric_limits<int>::max();
-        route_string = "";
-        route_ok = 0;
-    }
-    // 결과 출력
-    int ans_max = 0;
-    for (int i = 1; i <= N; i++)
-    {
-        for (int j = 1; j <= M; j++)
-        {
-            if (mapp[i][j] > ans_max)
-                ans_max = mapp[i][j];
-        }
-    }
-    cout << ans_max;
+    int cnt = 0;
+    for (int i = 0; i < N; i++)
+        for (int j = 0; j < M; j++)
+            if (mapp[i][j] > 0)
+                cnt++;
+    return cnt;
+}
+int x_change(int x)
+{
+    if (x == -1)
+        return N - 1;
+    if (x == N)
+        return 0;
+    return x;
+}
+int y_change(int y)
+{
+    if (y == -1)
+        return M - 1;
+    if (y == M)
+        return 0;
+    return y;
+}
+int oppose_direc(int d)
+{
+    if (d == 0)
+        return 2;
+    if (d == 1)
+        return 3;
+    if (d == 2)
+        return 0;
+    if (d == 3)
+        return 1;
+    return -1;
 }

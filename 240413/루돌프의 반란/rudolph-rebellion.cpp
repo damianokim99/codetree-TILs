@@ -613,7 +613,7 @@ int main()
         }
         plus_score();
         minus_stun();
-        show_santa();
+        // show_santa();
     }
     result();
 

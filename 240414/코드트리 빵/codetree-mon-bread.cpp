@@ -1,125 +1,182 @@
-// 1413
+// 1350
 #include <iostream>
-#include <vector>
 #include <queue>
-#include <climits>
-#include <utility>
+#include <vector>
 using namespace std;
-int n, m, cx, cy;                  // m: 사람 수
-int mapp[16][16];                  // 1~N      0: 빈칸, 1베이스, 2막힘
-vector<pair<int, int>> con;        // i번째 사람이 가고 싶어 하는 편의점 위치
-queue<pair<int, int>> reached_con; // 이번턴에 도달된 -> 벽으로 변신 예정
-int p[226][2];                     // i번째 사람 위치
-int reached_p;                     // 도달한 사람 수
-bool reached[226];
-int dfx[4] = {-1, 0, 0, 1}; // 상 좌 우 하
-int dfy[4] = {0, -1, 1, 0};
-int dx[4] = {-1, 0, 0, 1}; // 상 좌 우 하
-int dy[4] = {0, -1, 1, 0};
+int n, m;
+int mapp[16][16];               // 0:길  1:베이스캠프  2:막힘
+int dx_move[4] = {-1, 0, 0, 1}; // 상 좌 우 하
+int dy_move[4] = {0, -1, 1, 0};
+int dx_find[4] = {-1, 0, 0, 1}; // 상 좌 우 하
+int dy_find[4] = {0, -1, 1, 0};
+vector<pair<int, int>> base; // 베이스캠프 (출발지)
+vector<pair<int, int>> dest; // 편의점  (도착지)
+int reached[225];            // 0:아직 1: 도착
+int timestamp = 0;
+int num_reached = 0;
 
-int is_in(int x, int y);
-void start_base(int id);
-void move_people(int id);
-void close_con();
-int oppose_direc(int d);
-void show_mapp();
-
-void move_people(int id)
+void show()
 {
-    int x = p[id][0]; // 현재 위치
-    int y = p[id][1];
+    cout << endl;
+    for (int i = 1; i <= n; i++)
+    {
+        for (int j = 1; j <= n; j++)
+            cout << mapp[i][j];
+        cout << endl;
+    }
+}
 
-    int dest_x = con[id].first; // 목적지
-    int dest_y = con[id].second;
-
+int is_in(int x, int y) // 1~n
+{
+    if (x > 0 && x <= n && y > 0 && y <= n)
+        return 1;
+    return 0;
+}
+void find_base(int x, int y) // 편의점 -> 베이스 (경로 거꾸로)
+{
+    int find_dist; // 찾은 거리
     int visited[16][16] = {0};
     queue<pair<int, int>> q;
     q.push(make_pair(x, y));
-    visited[x][y] = -1; // 출발지 기록
+    while (!q.empty())
+    {
+        int a = q.front().first;
+        int b = q.front().second;
+        if (mapp[a][b] == 1)
+        {
+            base.push_back(make_pair(a, b));
+            mapp[a][b] = 2;
+            return;
+        }
+
+        visited[a][b] = 1;
+        q.pop();
+
+        for (int i = 0; i < 4; i++) // 상 좌 우 하
+        {
+            int nx = a + dx_find[i];
+            int ny = b + dy_find[i];
+            if (is_in(nx, ny) && visited[nx][ny] == 0 && mapp[nx][ny] != 2 && mapp[nx][ny] != 3)
+                q.push(make_pair(nx, ny));
+        }
+    }
+}
+int find_move(int x1, int y1, int x2, int y2) // 첫 경로 찾아야함
+{
+    queue<pair<int, int>> q;
+    int visited[16][16] = {0}; // 상1 좌2 우3 하4
+    q.push(make_pair(x1, y1));
+    visited[x1][y1] = 5;
+
     while (!q.empty())
     {
         int a = q.front().first;
         int b = q.front().second;
         q.pop();
-        for (int i = 0; i < 4; i++)
+
+        for (int i = 0; i < 4; i++) // 상1 좌2 우3 하4
         {
-            int nx = a + dx[i];
-            int ny = b + dy[i];
-            if (is_in(nx, ny) && visited[nx][ny] == 0 && mapp[nx][ny] != 2) // 칸 안, 방문x, 벽x
+            int nx = a + dx_move[i];
+            int ny = b + dy_move[i];
+            if (is_in(nx, ny) && visited[nx][ny] == 0 && mapp[nx][ny] != 2 && mapp[nx][ny] != 3)
             {
                 q.push(make_pair(nx, ny));
                 visited[nx][ny] = i + 1;
             }
         }
     }
-
-    int a = dest_x;
-    int b = dest_y;
-    int direc = oppose_direc(visited[a][b] - 1);
-
-    // 한칸 바로 옆이라면
-    if (a + dx[direc] == x && b + dy[direc] == y)
+    // 거꾸로 거슬러
+    int direc;
+    while (visited[x2][y2] != 5)
     {
-        reached[id] = 1;
-        reached_p++;
-        reached_con.push(make_pair(dest_x, dest_y));
-        return;
+        // cout << x2 << "," << y2 << "   ";
+        direc = visited[x2][y2];
+        if (direc == 1)
+            x2++;
+        else if (direc == 2)
+            y2++;
+        else if (direc == 3)
+            y2--;
+        else //(direc==4)
+            x2--;
     }
-
-    while (1)
-    {
-        direc = oppose_direc(visited[a][b] - 1);
-        if (a + dx[direc] == x && b + dy[direc] == y)
-            break;
-
-        a += dx[direc];
-        b += dy[direc];
-    }
-    // 위치 옮기기
-    p[id][0] = a;
-    p[id][1] = b;
+    return direc - 1; // 상1 좌2 우3 하4
 }
-void start_base(int id)
+void take_turn()
 {
-    int dest_x = con[id].first;
-    int dest_y = con[id].second;
-    // cout << "dest: " << dest_x << ", " << dest_y << endl;
+    /*
+    1. 격자에 있는 모두가 동시에 이동
+    2. if 도달 : 다음턴 부터, 지날 수 없음
+    3. 베이스캠프(출발) 위치하기. 다음부터 지날 수 없음
+    */
 
-    int visited[16][16] = {0};
-    queue<pair<int, int>> q;
-    q.push(make_pair(dest_x, dest_y));
-    visited[dest_x][dest_y] = 1;
-    int is_stop = 0;
-
-    while (!q.empty())
+    // 1. 존재하는 모두가 이동
+    queue<pair<int, int>> reached_dest;
+    int t = timestamp;
+    if (timestamp >= m) // 모두가 출발한 후
+        t = m;
+    for (int i = 0; i < t; i++)
     {
-        int a = q.front().first;
-        int b = q.front().second;
-        q.pop();
-        for (int i = 0; i < 4; i++)
-        {
-            int nx = a + dfx[i];
-            int ny = b + dfy[i];
-            if (is_in(nx, ny) && visited[nx][ny] == 0 && mapp[nx][ny] != 2) // 칸안, 방문x, 벽x
-            {
-                if (mapp[nx][ny] == 1)
-                {
-                    p[id][0] = nx;
-                    p[id][1] = ny;
-                    mapp[nx][ny] = 2; // 이제부터 이동 불가
-                    is_stop = 1;      // 그만탐색
-                    break;
-                }
-                else if (mapp[nx][ny] == 0)
-                {
-                    q.push(make_pair(nx, ny));
-                    visited[nx][ny] = 1;
-                }
-            }
-        }
-        if (is_stop == 1)
-            break;
+        if (reached[i] == 1)
+            continue;
+        int x1 = base[i].first;
+        int y1 = base[i].second;
+        int x2 = dest[i].first;
+        int y2 = dest[i].second;
+        // cout << "mv";
+        int direc = find_move(x1, y1, x2, y2);
+        // cout << "mv";
+        // 실제 이동
+        // cout << i << ": " << base[i].first << "," << base[i].second;
+        base[i].first += dx_move[direc];
+        base[i].second += dy_move[direc];
+        // cout << " -> " << base[i].first << "," << base[i].second << endl;
+
+        // cout << direc;
     }
+    // 2. 도달하면 2로 block
+    for (int i = 0; i < t; i++)
+    {
+        if (reached[i] == 1)
+            continue;
+        int x1 = base[i].first;
+        int y1 = base[i].second;
+        int x2 = dest[i].first;
+        int y2 = dest[i].second;
+
+        if (x1 == x2 && y1 == y2)
+        {
+            reached[i] = 1;
+            reached_dest.push(make_pair(x1, y1));
+            // mapp[x1][y1] = 2; -> 전부 이동하고 움직이기!!
+            num_reached++;
+        }
+    }
+    // 2 턴에 도착한 사람들 전부 이동후 변경
+    while (!reached_dest.empty())
+    {
+        int a = reached_dest.front().first;
+        int b = reached_dest.front().second;
+        reached_dest.pop();
+        mapp[a][b] = 3;
+    }
+    // 3. m이하 시 한명씩 출발
+    if (timestamp < m) // 등호 확인
+    {
+        int a = dest[timestamp].first;
+        int b = dest[timestamp].second;
+        find_base(a, b);
+    }
+
+    // show();
+    for (int i = 0; i < t; i++)
+    {
+        int a = base[i].first;
+        int b = base[i].second;
+        // cout << i << " : " << a << "," << b << endl;
+    }
+    // cout << "t: " << timestamp << " n:" << num_reached << endl;
+    timestamp++;
 }
 
 int main()
@@ -128,83 +185,28 @@ int main()
     cin >> n >> m;
     for (int i = 1; i <= n; i++)
         for (int j = 1; j <= n; j++)
-            cin >> mapp[i][j]; // 1: 시작 위치
-    for (int i = 0; i < m; i++)
+            cin >> mapp[i][j];
+    for (int i = 0; i < m; i++) // m개의 도착 위치
     {
-        cin >> cx >> cy;
-        con.push_back(make_pair(cx, cy)); // 도착 편의점
+        int a, b;
+        cin >> a >> b;
+        dest.push_back(make_pair(a, b));
     }
-    // cout << endl;
-    int turn = 0;
-    while (reached_p != m)
-    {
-        // 격자에 존재하는 사람들 전부 원하는 방향으로 이동
-        int move_p = turn;
-        if (turn >= m)
-            move_p = m;
+    // test find_base
+    // for (int i = 0; i < m; i++)
+    // {
+    //     int a = dest[i].first;
+    //     int b = dest[i].second;
+    //     find_base(a, b); // 이게 안됨
+    // }
 
-        // cout << "M: " << move_p << endl;///
+    // 반복
+    while (num_reached < m)
+        take_turn();
 
-        for (int i = 0; i < move_p; i++)
-            if (reached[i] == 0)
-                move_people(i);
+    // int h = 10;
+    // while (h--)
+    //     take_turn();
 
-        // 전부 도달 시 종료
-        // if (reached_p == m)
-        //     break;
-
-        // 닫아야 하는 편의점들 전부 닫기
-        close_con();
-
-        // cout << "after_move" << endl;
-        // show_mapp();
-
-        // 자신의 목적 편의점과 가장 가까운 베이스에서 사람 생성 (동일하면 x작은, y작은 순으로)
-        // 이때 부터 이 위치 이동 불가
-        if (turn < m) // ex) m=3
-            start_base(turn);
-        turn++;
-
-        // cout << "after_create" << endl;
-        // show_mapp();
-
-        // cout << "--------------------------" << endl;
-    }
-    cout << turn;
-}
-//```````````````````````````````````````````````````````````````````````````//
-void close_con()
-{
-    while (!reached_con.empty())
-    {
-        int x = reached_con.front().first;
-        int y = reached_con.front().second;
-        reached_con.pop();
-        mapp[x][y] = 2;
-    }
-}
-int oppose_direc(int d)
-{
-    if (d == 0)
-        return 3;
-    if (d == 1)
-        return 2;
-    if (d == 2)
-        return 1;
-    return 0; // 3
-}
-int is_in(int x, int y)
-{
-    if (x > 0 && y > 0 && x <= n && y <= n)
-        return 1;
-    return 0;
-}
-void show_mapp()
-{
-    for (int i = 1; i <= n; i++)
-    {
-        for (int j = 1; j <= n; j++)
-            cout << mapp[i][j] << " ";
-        cout << endl;
-    }
+    cout << timestamp;
 }
